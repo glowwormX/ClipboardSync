@@ -27,7 +27,6 @@ public class LoginMsg extends BaseMsg {
         if ("xqw".equals(loginMsg.getUserName()) && "123".equals(loginMsg.getPassword())) {
             //登录成功,把channel存到服务端的map中
             NettyChannelMap.add(loginMsg.getGroup(), loginMsg.getClientId(), socketChannel);
-            System.out.println("client" + loginMsg.getClientId() + " 登录成功");
         }
     }
 

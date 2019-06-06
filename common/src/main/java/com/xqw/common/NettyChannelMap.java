@@ -25,6 +25,8 @@ public class NettyChannelMap {
         } else {
             clientIds.add(clientId);
         }
+        System.out.println("client " + clientId + " 登录成功");
+        System.out.println(clientIds);
     }
 
     public static Channel getChannel(String clientId) {

@@ -1,7 +1,7 @@
 package com.xqw;
 
-import com.xqw.module.AskMsg;
 import com.xqw.common.Constants;
+import com.xqw.module.AskMsg;
 import com.xqw.module.LoginMsg;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -20,9 +20,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.awt.*;
 import java.awt.datatransfer.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -75,18 +73,19 @@ public class NettyClientBootstrap {
         final String group = login(args, bootstrap);
 
         final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-//        uploadClipboardText(sysClip, finalGroup, bootstrap);
-        sysClip.addFlavorListener(new FlavorListener() {
-            @Override
-            public void flavorsChanged(FlavorEvent flavorEvent) {
-                uploadClipboardText(sysClip, group, bootstrap);
-            }
-        });
+//        sysClip.addFlavorListener(new FlavorListener() {
+//            @Override
+//            public void flavorsChanged(FlavorEvent flavorEvent) {
+//                uploadClipboardText(sysClip, group, bootstrap);
+//            }
+//        });
         while (true) {
-            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
-            if ("exit".equals(str)) {
-                System.exit(0);
-            }
+//            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
+//            if ("exit".equals(str)) {
+//                System.exit(0);
+//            }
+            uploadClipboardText(sysClip, group, bootstrap);
+            Thread.sleep(1000);
         }
     }
 
@@ -112,6 +111,7 @@ public class NettyClientBootstrap {
                 if (Constants.lastClipboardText.equals(clipboardText)) {
                     return;
                 }
+                Constants.lastClipboardText = clipboardText;
                 System.out.println("clipboardText:" + clipboardText);
                 AskMsg askMsg = new AskMsg();
                 askMsg.setGroup(group);
