@@ -1,8 +1,9 @@
 package com.xqw;
 
 import com.xqw.common.Constants;
-import com.xqw.module.AskMsg;
+import com.xqw.module.AskReplyMsg;
 import com.xqw.module.LoginMsg;
+import com.xqw.utils.SysClipboardUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -19,7 +20,10 @@ import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.FlavorEvent;
+import java.awt.datatransfer.FlavorListener;
+import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -72,19 +76,20 @@ public class NettyClientBootstrap {
 
         final String group = login(args, bootstrap);
 
-        final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-//        sysClip.addFlavorListener(new FlavorListener() {
-//            @Override
-//            public void flavorsChanged(FlavorEvent flavorEvent) {
-//                uploadClipboardText(sysClip, group, bootstrap);
-//            }
-//        });
+        SysClipboardUtil.sysClip.addFlavorListener(new FlavorListener() {
+            @Override
+            public void flavorsChanged(FlavorEvent flavorEvent) {
+                Transferable trans = SysClipboardUtil.sysClip.getContents(null);
+                uploadClipboardText(trans, group, bootstrap);
+                uploadClipboardImage(trans, group, bootstrap);
+            }
+        });
         while (true) {
 //            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
 //            if ("exit".equals(str)) {
 //                System.exit(0);
 //            }
-            uploadClipboardText(sysClip, group, bootstrap);
+//            uploadClipboardText(group, bootstrap);
             Thread.sleep(1000);
         }
     }
@@ -103,24 +108,33 @@ public class NettyClientBootstrap {
         return group;
     }
 
-    private static void uploadClipboardText(Clipboard sysClip, String group, NettyClientBootstrap bootstrap) {
-        Transferable trans = sysClip.getContents(null);
+    private static void uploadClipboardText(Transferable trans, String group, NettyClientBootstrap bootstrap) {
         if (trans.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-            try {
-                String clipboardText = (String) trans.getTransferData(DataFlavor.stringFlavor);
-                if (Constants.lastClipboardText.equals(clipboardText)) {
-                    return;
-                }
-                Constants.lastClipboardText = clipboardText;
-                System.out.println("clipboardText:" + clipboardText);
-                AskMsg askMsg = new AskMsg();
-                askMsg.setGroup(group);
-                askMsg.setText(clipboardText);
-                bootstrap.socketChannel.writeAndFlush(askMsg);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            String text = SysClipboardUtil.getText(trans);
+            if (Constants.lastClipboardText.equals(text)) {
+                return;
             }
+            Constants.lastClipboardText = text;
+            AskReplyMsg askReplyMsg = new AskReplyMsg();
+            askReplyMsg.setGroup(group);
+            askReplyMsg.setBody(text);
+            bootstrap.socketChannel.writeAndFlush(askReplyMsg);
+            System.out.println("send AskMsg to server clipboardText:" + text);
+        }
+    }
+
+    private static void uploadClipboardImage(Transferable trans, String group, NettyClientBootstrap bootstrap) {
+        if (trans.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+            Image image = SysClipboardUtil.getImage(trans);
+//            if (Constants.lastClipboardText.equals(image)) {
+//                return;
+//            }
+//            Constants.lastClipboardText = image;
+            AskReplyMsg askReplyMsg = new AskReplyMsg();
+            askReplyMsg.setGroup(group);
+            askReplyMsg.setBody(image);
+            bootstrap.socketChannel.writeAndFlush(askReplyMsg);
+            System.out.println("send AskMsg to server clipboardText:" + image);
         }
     }
 
