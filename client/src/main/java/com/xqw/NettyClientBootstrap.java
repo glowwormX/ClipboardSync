@@ -82,32 +82,20 @@ public class NettyClientBootstrap {
         final String group = login(args, bootstrap);
 
         /* 有问题
-        addFlavorListener 服务器传输设置后第一次仍然会发送
-        windows执行一段时间后没用
         一次性会发送两次
         */
-        SysClipboardUtil.clipListener = new MyClipListener(flavorEvent -> {
-            Transferable trans = SysClipboardUtil.sysClip.getContents(null);
-            if (trans.equals(SysClipboardUtil.clipListener.getSyncContent())) return;
+        MyClipListener myClipListener = new MyClipListener(flavorEvent -> {
+            Transferable trans = SysClipboardUtil.getSysClip().getContents(null);
             uploadClipboardText(trans, group, bootstrap);
             uploadClipboardImage(trans, group, bootstrap);
+            //再设置一次，临时解决方案，若不设置后续监听不到
+            SysClipboardUtil.setSysClipContents(trans);
         });
-        SysClipboardUtil.sysClip.addFlavorListener(SysClipboardUtil.clipListener);
+        SysClipboardUtil.getSysClip().addFlavorListener(myClipListener);
         //TODO 存在问题
         //客户端锁屏后打开剪切板失败
         //断开连接 自动重连
         while (true) {
-//            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
-//            if ("exit".equals(str)) {
-//                System.exit(0);
-//            }
-//            try {
-//                Transferable trans = SysClipboardUtil.sysClip.getContents(null);
-//                uploadClipboardText(trans, group, bootstrap);
-//                uploadClipboardImage(trans, group, bootstrap);
-//            } catch (Exception e) {
-//                logger.error("执行异常", e);
-//            }
             Thread.sleep(1000);
         }
     }

@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,8 +21,6 @@ import java.util.List;
 public class AskReplyMsg extends BaseMsg {
     private static final Logger logger = LoggerFactory.getLogger(AskReplyMsg.class);
     private String group;
-//    private String text;
-//    private Image image;
     private Object body;
 
     public AskReplyMsg() {
@@ -54,8 +51,7 @@ public class AskReplyMsg extends BaseMsg {
         if (body != null) {
             Constants.lastClipboardContent = body;
             if (body instanceof String) {
-                Transferable trans = SysClipboardUtil.setSysClipboardText((String) body);
-                SysClipboardUtil.clipListener.setSyncContent(trans);
+                SysClipboardUtil.setSysClipboardText((String) body);
             }
             if (body instanceof byte[]) {
                 ByteArrayInputStream bin = new ByteArrayInputStream((byte[])body);
@@ -65,8 +61,7 @@ public class AskReplyMsg extends BaseMsg {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Transferable trans = SysClipboardUtil.setClipboardImage(image);
-                SysClipboardUtil.clipListener.setSyncContent(trans);
+                SysClipboardUtil.setClipboardImage(image);
             }
         }
         logger.info("receive server msg: " + body);
@@ -81,22 +76,6 @@ public class AskReplyMsg extends BaseMsg {
         this.group = group;
     }
 
-//    public String getText() {
-//        return text;
-//    }
-//
-//    public void setText(String text) {
-//        this.text = text;
-//    }
-//
-//    public Image getImage() {
-//        return image;
-//    }
-//
-//    public void setImage(Image image) {
-//        this.image = image;
-//    }
-
     public Object getBody() {
         return body;
     }
@@ -104,4 +83,6 @@ public class AskReplyMsg extends BaseMsg {
     public void setBody(Object body) {
         this.body = body;
     }
+
+
 }

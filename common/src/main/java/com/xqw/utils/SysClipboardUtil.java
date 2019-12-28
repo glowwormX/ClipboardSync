@@ -1,15 +1,12 @@
 package com.xqw.utils;
 
-import com.xqw.common.MyClipListener;
-
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class SysClipboardUtil {
-    public static final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
-    public static MyClipListener clipListener;
+    private static final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
 
     /**
      * 从剪切板获得文字。
@@ -32,8 +29,13 @@ public class SysClipboardUtil {
      */
     public static Transferable setSysClipboardText(String writeMe) {
         Transferable tText = new StringSelection(writeMe);
-        sysClip.setContents(tText, null);
+        setSysClipContents(tText);
         return tText;
+    }
+
+    public static void setSysClipContents(Transferable trans) {
+        sysClip.setContents(trans, null);
+//        clipListener.setSyncContent(trans);
     }
 
     /**
@@ -73,7 +75,11 @@ public class SysClipboardUtil {
             }
 
         };
-        sysClip.setContents(trans, null);
+        setSysClipContents(trans);
         return trans;
+    }
+
+    public static Clipboard getSysClip() {
+        return sysClip;
     }
 }
