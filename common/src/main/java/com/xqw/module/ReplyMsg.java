@@ -20,7 +20,7 @@
 //    @Override
 //    public void serverHandelMsg() {
 //        //服务端接收响应不做处理
-//        System.out.println("receive client msg: " + this.getBody());
+//        logger.info("receive client msg: " + this.getBody());
 //    }
 //
 //    @Override
@@ -30,7 +30,7 @@
 //            Constants.lastClipboardText = text;
 //            SysClipboardUtil.setSysClipboardText(text);
 //        }
-//        System.out.println("receive server msg: " + text);
+//        logger.info("receive server msg: " + text);
 //    }
 //
 //    public String getBody() {

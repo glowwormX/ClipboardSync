@@ -8,11 +8,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class NettyServerBootstrap {
+    private static final Logger logger = LoggerFactory.getLogger(NettyServerBootstrap.class);
     private int port;
     private SocketChannel socketChannel;
 
@@ -40,7 +43,7 @@ public class NettyServerBootstrap {
                 });
         ChannelFuture f = bootstrap.bind(port).sync();
         if (f.isSuccess()) {
-            System.out.println("server start---------------");
+            logger.info("server start---------------");
         }
         return f;
     }

@@ -2,6 +2,8 @@ package com.xqw.common;
 
 import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  */
 public class NettyChannelMap {
+    private static final Logger logger = LoggerFactory.getLogger(NettyChannelMap.class);
     private static Map<String, SocketChannel> map = new ConcurrentHashMap<String, SocketChannel>();
     private static Map<String, CopyOnWriteArrayList<String>> groupMap = new ConcurrentHashMap<String, CopyOnWriteArrayList<String>>();
 
@@ -25,8 +28,8 @@ public class NettyChannelMap {
         } else {
             clientIds.add(clientId);
         }
-        System.out.println("client " + clientId + " 登录成功");
-        System.out.println(clientIds);
+        logger.info("client " + clientId + " 登录成功");
+        logger.info(clientIds.toString());
     }
 
     public static Channel getChannel(String clientId) {
@@ -39,7 +42,7 @@ public class NettyChannelMap {
     public static void remove(SocketChannel socketChannel) {
         for (Map.Entry entry : map.entrySet()) {
             if (entry.getValue() == socketChannel) {
-                System.out.println(entry.getKey() + " 断开连接");
+                logger.info(entry.getKey() + " 断开连接");
                 map.remove(entry.getKey());
 
                 for (Map.Entry<String, CopyOnWriteArrayList<String>> e : groupMap.entrySet()) {

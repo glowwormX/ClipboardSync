@@ -1,18 +1,25 @@
 package com.xqw.module;
 
 import com.xqw.common.BaseMsg;
+import com.xqw.common.Constants;
 import com.xqw.common.MsgType;
 import com.xqw.common.NettyChannelMap;
 import com.xqw.utils.SysClipboardUtil;
 import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
  * 请求类型的消息
  */
 public class AskReplyMsg extends BaseMsg {
+    private static final Logger logger = LoggerFactory.getLogger(AskReplyMsg.class);
     private String group;
 //    private String text;
 //    private Image image;
@@ -33,7 +40,7 @@ public class AskReplyMsg extends BaseMsg {
                     if (!clientId.equals(this.getClientId())) {
                         AskReplyMsg replyMsg = new AskReplyMsg();
                         replyMsg.setBody(body);
-                        System.out.println(String.format("AskMsg to remoteAddress:%s , contenct:%s ", NettyChannelMap.getChannel(clientId).remoteAddress(), body));
+                        logger.info(String.format("AskMsg to remoteAddress:%s , contenct:%s ", NettyChannelMap.getChannel(clientId).remoteAddress(), body));
                         NettyChannelMap.getChannel(clientId).writeAndFlush(replyMsg);
                     }
                 }
@@ -44,15 +51,22 @@ public class AskReplyMsg extends BaseMsg {
     @Override
     public void clientHandelMsg(ChannelHandlerContext channelHandlerContext) {
         if (body != null) {
-//            Constants.lastClipboardText = text;
+            Constants.lastClipboardContent = body;
             if (body instanceof String) {
                 SysClipboardUtil.setSysClipboardText((String) body);
             }
-            if (body instanceof Image) {
-                SysClipboardUtil.setClipboardImage((Image) body);
+            if (body instanceof byte[]) {
+                ByteArrayInputStream bin = new ByteArrayInputStream((byte[])body);
+                BufferedImage image = null;
+                try {
+                    image = ImageIO.read(bin);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                SysClipboardUtil.setClipboardImage(image);
             }
         }
-        System.out.println("receive server msg: " + body);
+        logger.info("receive server msg: " + body);
     }
 
 

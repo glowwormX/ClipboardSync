@@ -18,18 +18,22 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.FlavorEvent;
-import java.awt.datatransfer.FlavorListener;
-import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 public class NettyClientBootstrap {
+    private static final Logger logger = LoggerFactory.getLogger(NettyClientBootstrap.class);
+
     private int port;
     private String host;
     private SocketChannel socketChannel;
@@ -59,7 +63,7 @@ public class NettyClientBootstrap {
         ChannelFuture future = bootstrap.connect(host, port).sync();
         if (future.isSuccess()) {
             socketChannel = (SocketChannel) future.channel();
-            System.out.println("connect server  成功---------");
+            logger.info("connect server  成功---------");
         }
     }
 
@@ -76,7 +80,13 @@ public class NettyClientBootstrap {
 
         final String group = login(args, bootstrap);
 
-        SysClipboardUtil.sysClip.addFlavorListener(new FlavorListener() {
+        Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
+        /* 有问题
+        addFlavorListener 服务器传输设置后第一次仍然会发送
+        windows执行一段时间后没用
+        一次性会发送两次
+        */
+        sysClip.addFlavorListener(new FlavorListener() {
             @Override
             public void flavorsChanged(FlavorEvent flavorEvent) {
                 Transferable trans = SysClipboardUtil.sysClip.getContents(null);
@@ -84,12 +94,21 @@ public class NettyClientBootstrap {
                 uploadClipboardImage(trans, group, bootstrap);
             }
         });
+        //TODO 存在问题
+        //客户端锁屏后打开剪切板失败
+        //断开连接 自动重连
         while (true) {
 //            String str = new BufferedReader(new InputStreamReader(System.in)).readLine();
 //            if ("exit".equals(str)) {
 //                System.exit(0);
 //            }
-//            uploadClipboardText(group, bootstrap);
+//            try {
+//                Transferable trans = SysClipboardUtil.sysClip.getContents(null);
+//                uploadClipboardText(trans, group, bootstrap);
+//                uploadClipboardImage(trans, group, bootstrap);
+//            } catch (Exception e) {
+//                logger.error("执行异常", e);
+//            }
             Thread.sleep(1000);
         }
     }
@@ -97,7 +116,7 @@ public class NettyClientBootstrap {
     private static String login(String[] args, NettyClientBootstrap bootstrap) {
         String group = getParam(args, "-group");
         if (group == null) {
-            System.out.println("请输入group参数");
+            logger.info("请输入group参数");
             System.exit(0);
         }
         LoginMsg loginMsg = new LoginMsg();
@@ -111,30 +130,46 @@ public class NettyClientBootstrap {
     private static void uploadClipboardText(Transferable trans, String group, NettyClientBootstrap bootstrap) {
         if (trans.isDataFlavorSupported(DataFlavor.stringFlavor)) {
             String text = SysClipboardUtil.getText(trans);
-            if (Constants.lastClipboardText.equals(text)) {
-                return;
+            if (!lastEquals(text)) {
+                AskReplyMsg askReplyMsg = new AskReplyMsg();
+                askReplyMsg.setGroup(group);
+                askReplyMsg.setBody(text);
+                bootstrap.socketChannel.writeAndFlush(askReplyMsg);
+                logger.info("send AskMsg to server clipboardText:" + text);
             }
-            Constants.lastClipboardText = text;
-            AskReplyMsg askReplyMsg = new AskReplyMsg();
-            askReplyMsg.setGroup(group);
-            askReplyMsg.setBody(text);
-            bootstrap.socketChannel.writeAndFlush(askReplyMsg);
-            System.out.println("send AskMsg to server clipboardText:" + text);
         }
+    }
+
+    private static boolean lastEquals(Object current) {
+        boolean equals = false;
+        if (Constants.lastClipboardContent.getClass().equals(current.getClass())) {
+            if(current instanceof String) {
+                equals = Constants.lastClipboardContent.equals(current);
+            } else if(current instanceof byte[]) {
+                equals = ((byte[])Constants.lastClipboardContent).length == ((byte[]) current).length;
+            }
+        }
+        if (!equals) Constants.lastClipboardContent = current;
+        return equals;
     }
 
     private static void uploadClipboardImage(Transferable trans, String group, NettyClientBootstrap bootstrap) {
         if (trans.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-            Image image = SysClipboardUtil.getImage(trans);
-//            if (Constants.lastClipboardText.equals(image)) {
-//                return;
-//            }
-//            Constants.lastClipboardText = image;
-            AskReplyMsg askReplyMsg = new AskReplyMsg();
-            askReplyMsg.setGroup(group);
-            askReplyMsg.setBody(image);
-            bootstrap.socketChannel.writeAndFlush(askReplyMsg);
-            System.out.println("send AskMsg to server clipboardText:" + image);
+            BufferedImage image = SysClipboardUtil.getImage(trans);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try {
+                ImageIO.write(image, "png", out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            byte[] bytes = out.toByteArray();
+            if (!lastEquals(bytes)) {
+                AskReplyMsg askReplyMsg = new AskReplyMsg();
+                askReplyMsg.setGroup(group);
+                askReplyMsg.setBody(bytes);
+                bootstrap.socketChannel.writeAndFlush(askReplyMsg);
+                logger.info("send AskMsg to server clipboardText:" + image);
+            }
         }
     }
 
@@ -149,7 +184,7 @@ public class NettyClientBootstrap {
                 }
             }
         } catch (Exception e) {
-            System.out.println("参数不对");
+            logger.info("参数不对");
             System.exit(0);
         }
         return res;
@@ -158,8 +193,8 @@ public class NettyClientBootstrap {
     private static void showTips(String[] args) {
         List<String> argList = Arrays.asList(args);
         if (argList.contains("?") || argList.contains("-help")) {
-            System.out.println("-host       server地址");
-            System.out.println("-group      用户组，在该参数下所有客户端共享剪切板");
+            logger.info("-host       server地址");
+            logger.info("-group      用户组，在该参数下所有客户端共享剪切板");
             System.exit(0);
         }
     }

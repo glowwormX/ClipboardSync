@@ -2,6 +2,7 @@ package com.xqw.utils;
 
 import java.awt.*;
 import java.awt.datatransfer.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class SysClipboardUtil {
@@ -33,9 +34,9 @@ public class SysClipboardUtil {
     /**
      * 从剪切板获得图片。
      */
-    public static Image getImage(Transferable trans) {
+    public static BufferedImage getImage(Transferable trans) {
         try {
-            return (Image) trans.getTransferData(DataFlavor.imageFlavor);
+            return (BufferedImage) trans.getTransferData(DataFlavor.imageFlavor);
         } catch (UnsupportedFlavorException e) {
             e.printStackTrace();
         } catch (IOException e) {

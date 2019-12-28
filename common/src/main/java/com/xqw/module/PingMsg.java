@@ -22,6 +22,6 @@ public class PingMsg extends BaseMsg {
 
     @Override
     public void clientHandelMsg(ChannelHandlerContext channelHandlerContext) {
-//        System.out.println("receive ping from server----------");
+//        logger.info("receive ping from server----------");
     }
 }
