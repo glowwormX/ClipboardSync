@@ -1,5 +1,7 @@
 package com.xqw.utils;
 
+import com.xqw.common.SysClipboardMonitor;
+
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.image.BufferedImage;
@@ -7,6 +9,7 @@ import java.io.IOException;
 
 public class SysClipboardUtil {
     private static final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
+    private static SysClipboardMonitor monitor;
 
     /**
      * 从剪切板获得文字。
@@ -34,8 +37,7 @@ public class SysClipboardUtil {
     }
 
     public static void setSysClipContents(Transferable trans) {
-        sysClip.setContents(trans, null);
-//        clipListener.setSyncContent(trans);
+        sysClip.setContents(trans, monitor);
     }
 
     /**
@@ -81,5 +83,9 @@ public class SysClipboardUtil {
 
     public static Clipboard getSysClip() {
         return sysClip;
+    }
+
+    public static void setMonitor(SysClipboardMonitor monitor) {
+        SysClipboardUtil.monitor = monitor;
     }
 }

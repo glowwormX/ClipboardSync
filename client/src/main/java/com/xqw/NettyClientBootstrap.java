@@ -1,7 +1,7 @@
 package com.xqw;
 
 import com.xqw.common.Constants;
-import com.xqw.common.MyClipListener;
+import com.xqw.common.SysClipboardMonitor;
 import com.xqw.module.AskReplyMsg;
 import com.xqw.module.LoginMsg;
 import com.xqw.utils.SysClipboardUtil;
@@ -84,14 +84,13 @@ public class NettyClientBootstrap {
         /* 有问题
         一次性会发送两次
         */
-        MyClipListener myClipListener = new MyClipListener(flavorEvent -> {
-            Transferable trans = SysClipboardUtil.getSysClip().getContents(null);
+        SysClipboardMonitor monitor = new SysClipboardMonitor((trans) -> {
             uploadClipboardText(trans, group, bootstrap);
             uploadClipboardImage(trans, group, bootstrap);
-            //再设置一次，临时解决方案，若不设置后续监听不到
-            SysClipboardUtil.setSysClipContents(trans);
+            logger.info("monitor end");
         });
-        SysClipboardUtil.getSysClip().addFlavorListener(myClipListener);
+        SysClipboardUtil.setMonitor(monitor);
+
         //TODO 存在问题
         //客户端锁屏后打开剪切板失败
         //断开连接 自动重连
