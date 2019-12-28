@@ -1,6 +1,8 @@
 package com.xqw.common;
 
 import com.xqw.utils.SysClipboardUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -12,6 +14,7 @@ import java.util.function.Consumer;
  */
 public class SysClipboardMonitor implements ClipboardOwner {
     Consumer<Transferable> consumer;
+    private static final Logger logger = LoggerFactory.getLogger(SysClipboardMonitor.class);
 
     public SysClipboardMonitor(Consumer<Transferable> consumer) {
         this.consumer = consumer;
@@ -20,8 +23,16 @@ public class SysClipboardMonitor implements ClipboardOwner {
 
     @Override
     public void lostOwnership(Clipboard clipboard, Transferable contents) {
-        Transferable trans = clipboard.getContents(null);
-        consumer.accept(trans);
-        clipboard.setContents(trans, this);
+        for (int i = 1; i < 10; i++) {
+            try {
+                Thread.sleep(1);
+                Transferable trans = clipboard.getContents(null);
+                consumer.accept(trans);
+                clipboard.setContents(trans, this);
+                return;
+            } catch (Exception e) {
+                logger.error("lostOwnership error, try times:{}, cause：{}" , i, e.getMessage());
+            }
+        }
     }
 }

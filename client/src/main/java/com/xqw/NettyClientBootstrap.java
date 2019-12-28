@@ -87,7 +87,6 @@ public class NettyClientBootstrap {
         SysClipboardMonitor monitor = new SysClipboardMonitor((trans) -> {
             uploadClipboardText(trans, group, bootstrap);
             uploadClipboardImage(trans, group, bootstrap);
-            logger.info("monitor end");
         });
         SysClipboardUtil.setMonitor(monitor);
 
