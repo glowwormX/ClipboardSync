@@ -1,6 +1,7 @@
 package com.xqw;
 
 import com.xqw.common.Constants;
+import com.xqw.common.MyClipListener;
 import com.xqw.module.AskReplyMsg;
 import com.xqw.module.LoginMsg;
 import com.xqw.utils.SysClipboardUtil;
@@ -22,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -80,20 +81,18 @@ public class NettyClientBootstrap {
 
         final String group = login(args, bootstrap);
 
-        Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
         /* 有问题
         addFlavorListener 服务器传输设置后第一次仍然会发送
         windows执行一段时间后没用
         一次性会发送两次
         */
-        sysClip.addFlavorListener(new FlavorListener() {
-            @Override
-            public void flavorsChanged(FlavorEvent flavorEvent) {
-                Transferable trans = SysClipboardUtil.sysClip.getContents(null);
-                uploadClipboardText(trans, group, bootstrap);
-                uploadClipboardImage(trans, group, bootstrap);
-            }
+        SysClipboardUtil.clipListener = new MyClipListener(flavorEvent -> {
+            Transferable trans = SysClipboardUtil.sysClip.getContents(null);
+            if (trans.equals(SysClipboardUtil.clipListener.getSyncContent())) return;
+            uploadClipboardText(trans, group, bootstrap);
+            uploadClipboardImage(trans, group, bootstrap);
         });
+        SysClipboardUtil.sysClip.addFlavorListener(SysClipboardUtil.clipListener);
         //TODO 存在问题
         //客户端锁屏后打开剪切板失败
         //断开连接 自动重连

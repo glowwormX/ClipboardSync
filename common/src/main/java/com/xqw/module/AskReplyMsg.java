@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
+import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -53,7 +54,8 @@ public class AskReplyMsg extends BaseMsg {
         if (body != null) {
             Constants.lastClipboardContent = body;
             if (body instanceof String) {
-                SysClipboardUtil.setSysClipboardText((String) body);
+                Transferable trans = SysClipboardUtil.setSysClipboardText((String) body);
+                SysClipboardUtil.clipListener.setSyncContent(trans);
             }
             if (body instanceof byte[]) {
                 ByteArrayInputStream bin = new ByteArrayInputStream((byte[])body);
@@ -63,7 +65,8 @@ public class AskReplyMsg extends BaseMsg {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                SysClipboardUtil.setClipboardImage(image);
+                Transferable trans = SysClipboardUtil.setClipboardImage(image);
+                SysClipboardUtil.clipListener.setSyncContent(trans);
             }
         }
         logger.info("receive server msg: " + body);

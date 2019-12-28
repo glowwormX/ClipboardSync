@@ -1,5 +1,7 @@
 package com.xqw.utils;
 
+import com.xqw.common.MyClipListener;
+
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.image.BufferedImage;
@@ -7,6 +9,7 @@ import java.io.IOException;
 
 public class SysClipboardUtil {
     public static final Clipboard sysClip = Toolkit.getDefaultToolkit().getSystemClipboard();
+    public static MyClipListener clipListener;
 
     /**
      * 从剪切板获得文字。
@@ -25,10 +28,12 @@ public class SysClipboardUtil {
 
     /**
      * 将字符串复制到剪切板。
+     * @return
      */
-    public static void setSysClipboardText(String writeMe) {
+    public static Transferable setSysClipboardText(String writeMe) {
         Transferable tText = new StringSelection(writeMe);
         sysClip.setContents(tText, null);
+        return tText;
     }
 
     /**
@@ -47,8 +52,9 @@ public class SysClipboardUtil {
 
     /**
      * 复制图片到剪切板。
+     * @return
      */
-    public static void setClipboardImage(final Image image) {
+    public static Transferable setClipboardImage(final Image image) {
         Transferable trans = new Transferable() {
             @Override
             public DataFlavor[] getTransferDataFlavors() {
@@ -68,5 +74,6 @@ public class SysClipboardUtil {
 
         };
         sysClip.setContents(trans, null);
+        return trans;
     }
 }
